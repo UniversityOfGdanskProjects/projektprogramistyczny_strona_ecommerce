@@ -24,20 +24,15 @@ export const authOptions = {
         const db = client.db("ecommerce");
         const user = await db.collection("admins").findOne({ email });
 
-        console.log("Znaleziony użytkownik:", user);
-
         if (!user) {
-          console.log("Użytkownik nie istnieje w bazie");
           return null;
         }
 
         const isPasswordValid = bcrypt.compareSync(password, user.password);
-        console.log("Czy hasło jest poprawne?", isPasswordValid);
 
         if (isPasswordValid) {
           return { id: user._id, email: user.email };
         } else {
-          console.log("Błędne hasło");
           return null;
         }
       },

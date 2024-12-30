@@ -28,7 +28,7 @@ export default function Layout({ children }) {
 
   if (!session) {
     return (
-      <div className="bg-blue-900 w-screen h-screen flex">
+      <div className="bg-green-900 w-screen h-screen flex">
         <form onSubmit={handleSubmit}>
           <input
             type="email"
@@ -54,14 +54,14 @@ export default function Layout({ children }) {
   }
 
   return (
-    <div className="bg-blue-900 min-h-screen flex">
+    <div className="bg-green-900 min-h-screen flex">
       <Nav />
 
       <div className="bg-white flex-grow mt-2 text-blue-900 mr-2 rounded-lg pl-4 mb-2">
         {children}
         <button
           onClick={() => signOut()}
-          className="bg-white text-blue-900 p-2 px-4 rounded-lg mt-4 "
+          className="bg-white text-green-900 p-2 px-4 rounded-lg mt-4 "
         >
           Wyloguj się
         </button>

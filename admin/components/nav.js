@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 export default function Nav() {
   const inactiveLink = "flex gap-1 p-1";
   const activeLink =
-    inactiveLink + " flex gap-1 bg-white text-blue-900 rounded-l-lg";
+    inactiveLink + " flex gap-1 bg-white text-green-900 rounded-l-lg";
   const pathname = usePathname();
 
   return (
@@ -70,7 +70,12 @@ export default function Nav() {
           Produkty
         </Link>
 
-        <Link href={"/zamowienia"} className={inactiveLink}>
+        <Link
+          href={"/zamowienia"}
+          className={
+            pathname.includes("/zamowienia") ? activeLink : inactiveLink
+          }
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -88,7 +93,12 @@ export default function Nav() {
           Zamówienia
         </Link>
 
-        <Link href={"/ustawienia"} className={inactiveLink}>
+        <Link
+          href={"/ustawienia"}
+          className={
+            pathname.includes("/ustawienia") ? activeLink : inactiveLink
+          }
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
