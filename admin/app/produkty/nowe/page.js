@@ -2,11 +2,13 @@
 import Layout from "@/components/layout";
 import { useState } from "react";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 
 export default function NewProduct() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
+  const router = useRouter();
 
   async function createProduct(ev) {
     ev.preventDefault();
@@ -16,6 +18,7 @@ export default function NewProduct() {
       setTitle("");
       setDescription("");
       setPrice("");
+      router.push("/produkty");
     } catch (error) {
       console.error("Błąd podczas wysyłania danych:", error);
       alert("Wystąpił błąd podczas dodawania produktu");

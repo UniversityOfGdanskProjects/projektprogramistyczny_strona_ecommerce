@@ -24,4 +24,19 @@
   .btn-primary {
     @apply bg-green-900 text-white px-4 w-1/4 py-1 rounded-md;
   }
+  table.basic {
+    @apply w-3/4;
+  }
+
+  table.basic thead tr td {
+    @apply bg-green-100;
+  }
+
+  table.basic tr td {
+    @apply border border-green-200 p-1;
+  }
+
+  table.basic a {
+    @apply bg-green-900 text-white text-sm py-1 px-2 rounded-md inline-flex gap-1;
+  }
 }
