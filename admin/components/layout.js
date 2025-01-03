@@ -3,10 +3,12 @@
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useState } from "react";
 import Nav from "./nav.js";
+import { usePathname } from "next/navigation";
 
 export default function Layout({ children }) {
   const { data: session } = useSession();
   const [error, setError] = useState(null);
+  const pathname = usePathname();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -59,12 +61,14 @@ export default function Layout({ children }) {
 
       <div className="bg-white flex-grow mt-2 text-blue-900 mr-2 rounded-lg pl-4 mb-2">
         {children}
-        <button
-          onClick={() => signOut()}
-          className="bg-white text-green-900 p-2 px-4 rounded-lg mt-4 "
-        >
-          Wyloguj się
-        </button>
+        {pathname === "/" && (
+          <button
+            onClick={() => signOut()}
+            className="bg-white text-green-900 p-2 px-4 rounded-lg mt-4 "
+          >
+            Wyloguj się
+          </button>
+        )}
       </div>
     </div>
   );
