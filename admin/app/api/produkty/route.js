@@ -1,6 +1,7 @@
 import { mongooseConnect } from "../../lib/mongoose";
 import { Product } from "@/models/Product";
 import { NextResponse } from "next/server";
+import { Category } from "@/models/Category";
 
 export async function POST(req) {
   try {
@@ -13,7 +14,18 @@ export async function POST(req) {
       description: data.description,
       price: data.price,
       images: data.images || [],
+      category: data.category,
+      properties: data.properties || {},
     };
+
+    if (data.category) {
+      const category = await Category.findById(data.category).populate(
+        "parent"
+      );
+      if (category?.parent) {
+        productData.parent_name = category.parent.name;
+      }
+    }
 
     console.log("Dane do zapisu w MongoDB:", productData);
     const product = await Product.create(productData);

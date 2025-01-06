@@ -9,14 +9,39 @@ export default function Categories() {
   const [categories, setCategories] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
+  const [properties, setProperties] = useState([]);
 
   useEffect(() => {
     fetchCategories();
   }, []);
 
+  function addProperty() {
+    setProperties((prev) => [
+      ...prev,
+      { property: "", values: "", id: Date.now() },
+    ]);
+  }
+
+  function removeProperty(indexToRemove) {
+    setProperties((prev) => prev.filter((_, index) => index !== indexToRemove));
+  }
+
+  function handlePropertyChange(index, field, value) {
+    setProperties((prev) => {
+      const newProperties = [...prev];
+      newProperties[index] = {
+        ...newProperties[index],
+        [field]: value,
+      };
+      return newProperties;
+    });
+  }
+
   async function fetchCategories() {
     try {
+      console.log("Rozpoczynam pobieranie kategorii");
       const response = await axios.get("/api/produkty/kategorie");
+      console.log("Otrzymane kategorie:", response.data);
       setCategories(response.data);
     } catch (error) {
       console.error("Błąd podczas pobierania kategorii:", error);
@@ -29,10 +54,14 @@ export default function Categories() {
 
     const categoryData = {
       name,
-      parent: parentCategory === "" ? null : parentCategory,
+      parent: parentCategory === "0" ? null : parentCategory,
+      properties: properties
+        .filter((p) => p.property && p.values)
+        .map((p) => ({
+          name: p.property,
+          values: p.values,
+        })),
     };
-
-    console.log("Wysyłane dane:", categoryData);
 
     try {
       if (editingCategory) {
@@ -46,6 +75,7 @@ export default function Categories() {
       }
       setName("");
       setParentCategory("");
+      setProperties([]);
       await fetchCategories();
     } catch (error) {
       console.error("Błąd przy zapisie kategorii:", error);
@@ -70,7 +100,18 @@ export default function Categories() {
   function editCategory(category) {
     setEditingCategory(category);
     setName(category.name);
-    setParentCategory(category.parentCategory || "");
+    setParentCategory(category.parent || "0");
+
+    if (category.properties && Array.isArray(category.properties)) {
+      const formattedProperties = category.properties.map((p) => ({
+        id: Date.now() + Math.random(),
+        property: p.name || "",
+        values: p.values || "",
+      }));
+      setProperties(formattedProperties);
+    } else {
+      setProperties([]);
+    }
   }
 
   return (
@@ -81,35 +122,73 @@ export default function Categories() {
       <label>
         {editingCategory ? "Edytuj kategorię" : "Nowa nazwa kategorii"}
       </label>
-      <form
-        onSubmit={saveCategory}
-        className="flex flex-col sm:flex-row gap-2 mr-2"
-      >
-        <input
-          className="mb-0 min-w-0 flex-1"
-          type="text"
-          placeholder="Nazwa kategorii"
-          onChange={(ev) => setName(ev.target.value)}
-          value={name}
-          required
-        />
-        <select
-          className="mb-0 min-w-0 flex-1"
-          value={parentCategory}
-          onChange={(ev) => setParentCategory(ev.target.value)}
-        >
-          <option value="0">Brak kategorii nadrzędnej</option>
-          {categories.map((category) => (
-            <option
-              key={category._id}
-              value={category._id}
-              disabled={editingCategory && editingCategory._id === category._id}
+      <form onSubmit={saveCategory}>
+        <div className="flex flex-col sm:flex-row gap-2 mr-2">
+          <input
+            className="mb-0 min-w-0 flex-1"
+            type="text"
+            placeholder="Nazwa kategorii"
+            onChange={(ev) => setName(ev.target.value)}
+            value={name}
+            required
+          />
+          <select
+            className="mb-0 min-w-0 flex-1"
+            value={parentCategory}
+            onChange={(ev) => setParentCategory(ev.target.value)}
+          >
+            <option value="0">Brak kategorii nadrzędnej</option>
+            {categories.map((category) => (
+              <option
+                key={category._id}
+                value={category._id}
+                disabled={
+                  editingCategory && editingCategory._id === category._id
+                }
+              >
+                {category.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <label className="block mt-2">Własności</label>
+
+        <button type="button" className="btn-default" onClick={addProperty}>
+          Dodaj nową własność
+        </button>
+
+        {properties.map((prop, index) => (
+          <div key={prop.id} className="flex gap-2 mt-2">
+            <input
+              type="text"
+              className="mb-0 flex-1"
+              placeholder="własność (np. kolor)"
+              value={prop.property}
+              onChange={(ev) =>
+                handlePropertyChange(index, "property", ev.target.value)
+              }
+            />
+            <input
+              type="text"
+              className="mb-0 flex-1"
+              placeholder="wartości (oddzielane przecinkiem)"
+              value={prop.values}
+              onChange={(ev) =>
+                handlePropertyChange(index, "values", ev.target.value)
+              }
+            />
+            <button
+              type="button"
+              className="btn-default"
+              onClick={() => removeProperty(index)}
             >
-              {category.name}
-            </option>
-          ))}
-        </select>
-        <div className="flex gap-2 shrink-0">
+              Usuń
+            </button>
+          </div>
+        ))}
+
+        <div className="flex gap-2 mt-4">
           <button
             type="submit"
             className="btn-primary min-w-[100px] whitespace-nowrap"
@@ -128,6 +207,7 @@ export default function Categories() {
                 setEditingCategory(null);
                 setName("");
                 setParentCategory("");
+                setProperties([]);
               }}
               className="btn-default min-w-[100px] whitespace-nowrap"
             >
@@ -136,6 +216,7 @@ export default function Categories() {
           )}
         </div>
       </form>
+
       <table className="basic mt-4">
         <thead>
           <tr>

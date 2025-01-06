@@ -14,6 +14,8 @@ export async function PUT(request, { params }) {
       description: data.description,
       price: data.price,
       images: data.images || [],
+      category: data.category,
+      properties: data.properties || {},
     };
 
     console.log("Dane do aktualizacji:", updateData);
@@ -21,7 +23,7 @@ export async function PUT(request, { params }) {
     const updatedProduct = await Product.findByIdAndUpdate(id, updateData, {
       new: true,
       runValidators: true,
-    });
+    }).populate("category");
 
     console.log("Zaktualizowany produkt:", updatedProduct);
 
@@ -40,7 +42,7 @@ export async function GET(request, { params }) {
   try {
     await mongooseConnect();
     const { id } = params;
-    const product = await Product.findById(id);
+    const product = await Product.findById(id).populate("category");
 
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });

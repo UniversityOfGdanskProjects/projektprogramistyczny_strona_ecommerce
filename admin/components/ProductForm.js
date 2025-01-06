@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import Spinner from "./spinner";
@@ -10,10 +10,20 @@ export default function ProductForm({
   description: existingDescription,
   price: existingPrice,
   images = [],
+  category: existingCategory,
+  properties: existingProperties,
 }) {
   const [title, setTitle] = useState(existingTitle || "");
   const [description, setDescription] = useState(existingDescription || "");
   const [price, setPrice] = useState(existingPrice || "");
+  const [category, setCategory] = useState(
+    existingCategory?._id || existingCategory || ""
+  );
+  const [categories, setCategories] = useState([]);
+  const [productProperties, setProductProperties] = useState(
+    existingProperties || {}
+  );
+  const [categoryProperties, setCategoryProperties] = useState([]);
   const [productImages, setProductImages] = useState(
     images.map((url, index) => ({
       id: index + 1,
@@ -23,7 +33,75 @@ export default function ProductForm({
   const [isUploading, setIsUploading] = useState(false);
   const router = useRouter();
 
-  console.log("Inicjalizacja ProductForm z images:", images);
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    if (category) {
+      fetchCategoryWithParentProperties();
+    } else {
+      setCategoryProperties([]);
+      setProductProperties({});
+    }
+  }, [category]);
+
+  async function fetchCategories() {
+    try {
+      const response = await axios.get("/api/produkty/kategorie");
+      setCategories(response.data);
+    } catch (error) {
+      console.error("Błąd podczas pobierania kategorii:", error);
+    }
+  }
+
+  async function fetchCategoryWithParentProperties() {
+    try {
+      const response = await axios.get(
+        `/api/produkty/kategorie/${category}/properties?includeParents=true`
+      );
+      const transformedProperties = response.data.map((prop) => ({
+        ...prop,
+        values: Array.isArray(prop.values)
+          ? prop.values.flatMap((value) =>
+              typeof value === "string"
+                ? value
+                    .split(",")
+                    .map((v) => v.trim())
+                    .filter(Boolean)
+                : value
+            )
+          : [],
+      }));
+
+      const mergedProperties = mergeProperties(transformedProperties);
+
+      setCategoryProperties(mergedProperties);
+    } catch (error) {
+      console.error("Błąd podczas pobierania właściwości kategorii:", error);
+    }
+  }
+
+  function mergeProperties(properties) {
+    const propertyMap = new Map();
+
+    properties.forEach((prop) => {
+      if (propertyMap.has(prop.name)) {
+        const existing = propertyMap.get(prop.name);
+        const combinedValues = [
+          ...new Set([...existing.values, ...prop.values]),
+        ];
+        propertyMap.set(prop.name, {
+          ...prop,
+          values: combinedValues,
+        });
+      } else {
+        propertyMap.set(prop.name, prop);
+      }
+    });
+
+    return Array.from(propertyMap.values());
+  }
 
   async function saveProduct(ev) {
     ev.preventDefault();
@@ -32,25 +110,32 @@ export default function ProductForm({
       description,
       price,
       images: productImages.map((item) => item.url),
+      category,
+      properties: productProperties,
     };
-    console.log("Dane przed wysłaniem:", data);
     try {
       if (_id) {
-        const response = await axios.put(`/api/produkty/${_id}`, data);
-        console.log("Odpowiedź z serwera (PUT):", response.data);
+        await axios.put(`/api/produkty/${_id}`, data);
       } else {
-        const response = await axios.post("/api/produkty", data);
-        console.log("Odpowiedź z serwera (POST):", response.data);
+        await axios.post("/api/produkty", data);
       }
       setTitle("");
       setDescription("");
       setPrice("");
+      setCategory("");
       setProductImages([]);
       router.push("/produkty");
     } catch (error) {
       console.error("Błąd podczas wysyłania danych:", error);
       alert("Wystąpił błąd podczas dodawania produktu");
     }
+  }
+
+  function handlePropertyValueChange(propName, value) {
+    setProductProperties((prev) => ({
+      ...prev,
+      [propName]: value,
+    }));
   }
 
   async function uploadImages(ev) {
@@ -82,9 +167,11 @@ export default function ProductForm({
       }
     }
   }
+
   function uploadImagesOrder(productImages) {
     setProductImages(productImages);
   }
+
   return (
     <form onSubmit={saveProduct} className="flex flex-col">
       <div className="flex flex-col">
@@ -99,6 +186,51 @@ export default function ProductForm({
           className="border"
         />
       </div>
+      <div className="flex flex-col">
+        <label>
+          <b>Kategoria</b>
+        </label>
+        <select
+          value={category}
+          onChange={(ev) => setCategory(ev.target.value)}
+          className="border"
+        >
+          <option value="">Bez kategorii</option>
+          {categories.map((cat) => (
+            <option key={cat._id} value={cat._id}>
+              {cat.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {categoryProperties.map((property) => (
+        <div key={property.name} className="flex flex-col">
+          <label>
+            <b>{property.name}</b>
+            {property.categoryName && (
+              <span className="text-sm text-gray-500 ml-2">
+                (z kategorii: {property.categoryName})
+              </span>
+            )}
+          </label>
+          <select
+            value={productProperties[property.name] || ""}
+            onChange={(ev) =>
+              handlePropertyValueChange(property.name, ev.target.value)
+            }
+            className="border"
+          >
+            <option value="">Wybierz {property.name}</option>
+            {property.values.map((value) => (
+              <option key={value} value={value}>
+                {value}
+              </option>
+            ))}
+          </select>
+        </div>
+      ))}
+
       <div className="flex flex-col flex-wrapped">
         <label>Zdjęcia</label>
         <div className="mb-2">
@@ -123,7 +255,7 @@ export default function ProductForm({
               multiple
               onChange={uploadImages}
               className="hidden"
-            ></input>
+            />
           </label>
         </div>
         {isUploading && (
