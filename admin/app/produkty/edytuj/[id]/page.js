@@ -29,7 +29,7 @@ export default function EditProductPage() {
 
   return (
     <Layout>
-      <h1 className="mb-0 mt-3">Edytuj produkt</h1>
+      <h1>Edytuj produkt</h1>
       <ProductForm {...productInfo} />
     </Layout>
   );

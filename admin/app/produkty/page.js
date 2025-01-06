@@ -23,17 +23,14 @@ export default function Products() {
   return (
     <Layout>
       <div className="mt-5">
-        <Link
-          className="bg-green-900 rounded-md text-white py-1 px-2 mt-5"
-          href={"/produkty/nowe"}
-        >
+        <Link className="btn-primary" href={"/produkty/nowe"}>
           Dodaj nowy produkt
         </Link>
       </div>
       <table className="basic mt-4">
         <thead>
           <tr>
-            <td className="text-black ">
+            <td>
               <b>Nazwa produktu</b>
             </td>
             <td></td>
@@ -42,9 +39,12 @@ export default function Products() {
         <tbody>
           {products.map((product) => (
             <tr key={product._id}>
-              <td className="text-black">{product.title}</td>
+              <td>{product.title}</td>
               <td>
-                <Link href={`/produkty/edytuj/${product._id}`}>
+                <Link
+                  className="btn-default"
+                  href={`/produkty/edytuj/${product._id}`}
+                >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
@@ -61,7 +61,10 @@ export default function Products() {
                   </svg>
                   Edytuj
                 </Link>
-                <Link href={`/produkty/usun/${product._id}`}>
+                <Link
+                  className="btn-red"
+                  href={`/produkty/usun/${product._id}`}
+                >
                   {" "}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"

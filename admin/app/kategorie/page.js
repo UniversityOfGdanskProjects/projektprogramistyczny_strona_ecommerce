@@ -180,7 +180,7 @@ export default function Categories() {
             />
             <button
               type="button"
-              className="btn-default"
+              className="btn-red"
               onClick={() => removeProperty(index)}
             >
               Usuń
@@ -235,7 +235,7 @@ export default function Categories() {
               <td className="flex flex-col sm:flex-row gap-1">
                 <button
                   onClick={() => editCategory(category)}
-                  className="btn-primary flex gap-1 items-center justify-center whitespace-nowrap min-w-[120px]"
+                  className="btn-default flex gap-1 items-center justify-center whitespace-nowrap min-w-[120px]"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -255,7 +255,7 @@ export default function Categories() {
                 </button>
                 <button
                   onClick={() => deleteCategory(category._id)}
-                  className="btn-primary flex gap-1 items-center justify-center whitespace-nowrap min-w-[120px]"
+                  className="btn-red flex gap-1 items-center justify-center whitespace-nowrap min-w-[120px]"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"

@@ -4,8 +4,10 @@ import { signIn, signOut, useSession } from "next-auth/react";
 import { useState } from "react";
 import Nav from "./nav.js";
 import { usePathname } from "next/navigation";
+import Logo from "./logo.js";
 
 export default function Layout({ children }) {
+  const [showNav, setShowNav] = useState(false);
   const { data: session } = useSession();
   const [error, setError] = useState(null);
   const pathname = usePathname();
@@ -30,7 +32,7 @@ export default function Layout({ children }) {
 
   if (!session) {
     return (
-      <div className="bg-green-900 w-screen h-screen flex">
+      <div className="bg-bgGray w-screen h-screen flex">
         <form onSubmit={handleSubmit}>
           <input
             type="email"
@@ -56,19 +58,39 @@ export default function Layout({ children }) {
   }
 
   return (
-    <div className="bg-green-900 min-h-screen flex">
-      <Nav />
-
-      <div className="bg-white flex-grow mt-2 text-blue-900 mr-2 rounded-lg pl-4 mb-2">
-        {children}
-        {pathname === "/" && (
-          <button
-            onClick={() => signOut()}
-            className="bg-white text-green-900 p-2 px-4 rounded-lg mt-4 "
+    <div className="bg-bgGray min-h-screen">
+      <div className="md:hidden flex items-center p-4 ">
+        <button onClick={() => setShowNav(!showNav)}>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            className="w-6 h-6"
           >
-            Wyloguj się
-          </button>
-        )}
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6h16M4 12h16M4 18h16"
+            />
+          </svg>
+        </button>
+        <div className="flex grow justify-center">
+          <Logo />
+        </div>
+      </div>
+
+      <div className="flex">
+        <Nav show={showNav} />
+        <div className="flex-grow p-4">
+          {children}
+          {pathname === "/" && (
+            <button onClick={() => signOut()} className=" btn-primary mt-4">
+              Wyloguj się
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

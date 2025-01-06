@@ -232,9 +232,9 @@ export default function ProductForm({
       ))}
 
       <div className="flex flex-col flex-wrapped">
-        <label>Zdjęcia</label>
+        <b className="text-gray-600 text-sm">Zdjęcia</b>
         <div className="mb-2">
-          <label className="w-24 h-24 cursor-pointer flex flex-col items-center justify-center text-sm text-gray-500 rounded-lg bg-gray-200">
+          <label className="w-24 h-24 cursor-pointer flex flex-col items-center justify-center text-sm text-primary rounded-lg bg-white shadow-sm border border-gray-300">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
