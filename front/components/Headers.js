@@ -7,6 +7,7 @@ import { useCart } from "./CartContext";
 const StyledHeader = styled.header`
   background-color: #222;
 `;
+
 const Logo = styled(Link)`
   color: #fff;
   text-decoration: none;
@@ -27,8 +28,9 @@ const StyledNav = styled.nav`
   display: flex;
   gap: 15px;
 `;
+
 export default function Header() {
-  const { cartProducts } = useCart();
+  const { cartProducts, getTotalCartCount } = useCart();
 
   return (
     <StyledHeader>
@@ -40,7 +42,7 @@ export default function Header() {
             <NavLink href={"/produkty"}>Wszystkie produkty</NavLink>
             <NavLink href={"/kategorie"}>Kategorie</NavLink>
             <NavLink href={"/konto"}>Konto</NavLink>
-            <NavLink href={"/koszyk"}>Koszyk ({cartProducts.length})</NavLink>
+            <NavLink href={"/koszyk"}>Koszyk ({getTotalCartCount()})</NavLink>
           </StyledNav>
         </Wrapper>
       </Center>

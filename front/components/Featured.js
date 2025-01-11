@@ -45,16 +45,75 @@ const ButtonWrapper = styled.div`
 export default function Featured() {
   const { addProduct } = useCart();
   const [products, setProducts] = useState([]);
+  const [macbookProduct, setMacbookProduct] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    setIsLoading(true);
+    setError(null);
+
     fetch("/api/products")
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("Fetched products:", data);
-        setProducts(data);
+      .then(async (res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        const data = await res.json();
+        console.log("Raw API response:", data);
+
+        if (!data) {
+          throw new Error("No data received");
+        }
+
+        const productsArray = Array.isArray(data) ? data : Object.values(data);
+
+        if (productsArray.length === 0) {
+          console.warn("Received empty products array");
+        }
+
+        console.log("Processed products array:", productsArray);
+
+        setProducts(productsArray);
+
+        const macbook = productsArray.find((p) =>
+          p?.title?.toLowerCase().includes("macbook")
+        );
+
+        if (macbook) {
+          console.log("Found Macbook product:", macbook);
+          setMacbookProduct(macbook);
+        } else {
+          console.warn("Macbook product not found in the data");
+        }
       })
-      .catch((err) => console.error("Error fetching products:", err));
+      .catch((err) => {
+        console.error("Error loading products:", err);
+        setError(err.message);
+        setProducts([]);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, []);
+
+  const handleAddToCart = () => {
+    if (macbookProduct) {
+      const productToAdd = {
+        id: macbookProduct._id,
+        title: macbookProduct.title,
+        price: macbookProduct.price,
+        image: macbookProduct.images?.[0],
+      };
+      console.log("Dodawanie produktu do koszyka:", productToAdd);
+      addProduct(productToAdd);
+    } else {
+      console.warn("Nie można dodać produktu - brak danych o MacBooku");
+    }
+  };
+
+  if (error) {
+    console.error("Błąd ładowania produktów:", error);
+  }
 
   return (
     <>
@@ -63,7 +122,7 @@ export default function Featured() {
           <Wrapper>
             <Column>
               <div>
-                <Title>Macbook Pro M4</Title>
+                <Title>Macbook Pro M2</Title>
                 <Desc>
                   Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed
                   do eiusmod tempor incididunt ut labore et dolore magna aliqua.
@@ -73,7 +132,11 @@ export default function Featured() {
                   <Button $outline $white>
                     Czytaj więcej
                   </Button>
-                  <Button $primary onClick={() => addProduct(products[0]?._id)}>
+                  <Button
+                    $primary
+                    onClick={handleAddToCart}
+                    disabled={!macbookProduct}
+                  >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 24 24"
@@ -97,7 +160,13 @@ export default function Featured() {
         </Center>
       </Bg>
       <Center>
-        <ProductBox products={products} />
+        {isLoading ? (
+          <div>Ładowanie produktów...</div>
+        ) : error ? (
+          <div>Błąd: {error}</div>
+        ) : (
+          <ProductBox products={products} />
+        )}
       </Center>
     </>
   );
