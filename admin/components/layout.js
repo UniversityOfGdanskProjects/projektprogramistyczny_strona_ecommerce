@@ -1,58 +1,32 @@
 "use client";
-
-import { signIn, signOut, useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { useState } from "react";
 import Nav from "./nav.js";
 import { usePathname } from "next/navigation";
 import Logo from "./logo.js";
+import SharedLogin from "./SharedLogin";
 
 export default function Layout({ children }) {
   const [showNav, setShowNav] = useState(false);
   const { data: session } = useSession();
-  const [error, setError] = useState(null);
   const pathname = usePathname();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const email = e.target.email.value;
-    const password = e.target.password.value;
-
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
-
-    if (result?.error) {
-      setError("Nieprawidłowy email lub hasło");
-    } else {
-      setError(null);
-    }
-  };
-
   if (!session) {
+    return <SharedLogin />;
+  }
+
+  if (session?.user?.role !== "admin") {
     return (
-      <div className="bg-bgGray w-screen h-screen flex">
-        <form onSubmit={handleSubmit}>
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            required
-            className="p-2 mb-2 rounded-lg"
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            required
-            className="p-2 mb-2 rounded-lg"
-          />
-          <button type="submit" className="bg-white p-2 px-4 rounded-lg">
-            Zaloguj się
+      <div className="bg-bgGray w-screen h-screen flex justify-center items-center">
+        <div className="bg-white p-4 rounded-lg">
+          <p>Brak uprawnień administratora</p>
+          <button
+            onClick={() => signOut()}
+            className="bg-blue-500 text-white p-2 rounded mt-2"
+          >
+            Wyloguj się
           </button>
-        </form>
-        {error && <p className="text-red-500 mt-2">{error}</p>}
+        </div>
       </div>
     );
   }
@@ -86,7 +60,7 @@ export default function Layout({ children }) {
         <div className="flex-grow p-4">
           {children}
           {pathname === "/" && (
-            <button onClick={() => signOut()} className=" btn-primary mt-4">
+            <button onClick={() => signOut()} className="btn-primary mt-4">
               Wyloguj się
             </button>
           )}

@@ -5,6 +5,7 @@ import Button from "./Button";
 import { useEffect, useState } from "react";
 import ProductBox from "./ProductsGrid";
 import { useCart } from "./CartContext";
+import { useSession } from "next-auth/react";
 
 const Bg = styled.div`
   background-color: #222;
@@ -42,12 +43,19 @@ const ButtonWrapper = styled.div`
   margin-top: 25px;
 `;
 
+const WelcomeMessage = styled.div`
+  color: #aaa;
+  margin-bottom: 20px;
+  font-size: 1.2rem;
+`;
+
 export default function Featured() {
   const { addProduct } = useCart();
   const [products, setProducts] = useState([]);
   const [macbookProduct, setMacbookProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { data: session } = useSession();
 
   useEffect(() => {
     setIsLoading(true);
@@ -119,6 +127,9 @@ export default function Featured() {
     <>
       <Bg>
         <Center>
+          {session && (
+            <WelcomeMessage>Witaj, {session.user.email}!</WelcomeMessage>
+          )}
           <Wrapper>
             <Column>
               <div>

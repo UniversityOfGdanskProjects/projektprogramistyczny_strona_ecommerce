@@ -69,8 +69,27 @@ const Title = styled.h2`
   font-weight: 500;
 `;
 
+const PaymentMethods = styled.div`
+  margin: 20px 0;
+`;
+
+const PaymentMethod = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  &:hover {
+    border-color: #8273d1;
+  }
+`;
+
 const CartPage = () => {
   const { cartProducts, updateQuantity } = useCart();
+  const [selectedPayment, setSelectedPayment] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     surname: "",
@@ -91,6 +110,34 @@ const CartPage = () => {
   const totalPrice = cartProducts.reduce((total, item) => {
     return total + item.price * item.quantity;
   }, 0);
+
+  const handleSubmitOrder = (e) => {
+    e.preventDefault();
+    if (!selectedPayment) {
+      alert("Proszę wybrać metodę płatności");
+      return;
+    }
+
+    console.log("Zamówienie:", {
+      formData,
+      selectedPayment,
+      cartProducts,
+      totalPrice,
+    });
+  };
+
+  if (cartProducts.length === 0) {
+    return (
+      <Center>
+        <Box>
+          <Title>Koszyk</Title>
+          <div style={{ textAlign: "center", padding: "20px" }}>
+            Brak produktów w koszyku
+          </div>
+        </Box>
+      </Center>
+    );
+  }
 
   return (
     <Center>
@@ -126,59 +173,108 @@ const CartPage = () => {
           <TotalPrice>Suma: {totalPrice} zł</TotalPrice>
         </Box>
         <Box>
-          <Title>Dane do zamówienia</Title>
-          <Input
-            type="text"
-            placeholder="Imię"
-            name="name"
-            value={formData.name}
-            onChange={handleInputChange}
-          />
-          <Input
-            type="text"
-            placeholder="Nazwisko"
-            name="surname"
-            value={formData.surname}
-            onChange={handleInputChange}
-          />
-          <Input
-            type="email"
-            placeholder="Email"
-            name="email"
-            value={formData.email}
-            onChange={handleInputChange}
-          />
-          <Input
-            type="text"
-            placeholder="Miasto"
-            name="city"
-            value={formData.city}
-            onChange={handleInputChange}
-          />
-          <Input
-            type="text"
-            placeholder="Kod pocztowy"
-            name="postalCode"
-            value={formData.postalCode}
-            onChange={handleInputChange}
-          />
-          <Input
-            type="text"
-            placeholder="Ulica"
-            name="street"
-            value={formData.street}
-            onChange={handleInputChange}
-          />
-          <Input
-            type="text"
-            placeholder="Kraj"
-            name="country"
-            value={formData.country}
-            onChange={handleInputChange}
-          />
-          <Button $primary style={{ width: "100%", marginTop: "20px" }}>
-            Przejdź do płatności
-          </Button>
+          <form onSubmit={handleSubmitOrder}>
+            <Title>Dane do zamówienia</Title>
+            <Input
+              type="text"
+              placeholder="Imię"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              required
+            />
+            <Input
+              type="text"
+              placeholder="Nazwisko"
+              name="surname"
+              value={formData.surname}
+              onChange={handleInputChange}
+              required
+            />
+            <Input
+              type="email"
+              placeholder="Email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              required
+            />
+            <Input
+              type="text"
+              placeholder="Miasto"
+              name="city"
+              value={formData.city}
+              onChange={handleInputChange}
+              required
+            />
+            <Input
+              type="text"
+              placeholder="Kod pocztowy"
+              name="postalCode"
+              value={formData.postalCode}
+              onChange={handleInputChange}
+              required
+            />
+            <Input
+              type="text"
+              placeholder="Ulica"
+              name="street"
+              value={formData.street}
+              onChange={handleInputChange}
+              required
+            />
+            <Input
+              type="text"
+              placeholder="Kraj"
+              name="country"
+              value={formData.country}
+              onChange={handleInputChange}
+              required
+            />
+
+            <Title>Metoda płatności</Title>
+            <PaymentMethods>
+              <PaymentMethod>
+                <input
+                  type="radio"
+                  name="payment"
+                  value="blik"
+                  checked={selectedPayment === "blik"}
+                  onChange={(e) => setSelectedPayment(e.target.value)}
+                  required
+                />
+                <label>BLIK</label>
+              </PaymentMethod>
+              <PaymentMethod>
+                <input
+                  type="radio"
+                  name="payment"
+                  value="card"
+                  checked={selectedPayment === "card"}
+                  onChange={(e) => setSelectedPayment(e.target.value)}
+                />
+                <label>Karta płatnicza</label>
+              </PaymentMethod>
+              <PaymentMethod>
+                <input
+                  type="radio"
+                  name="payment"
+                  value="transfer"
+                  checked={selectedPayment === "transfer"}
+                  onChange={(e) => setSelectedPayment(e.target.value)}
+                />
+                <label>Przelew bankowy</label>
+              </PaymentMethod>
+            </PaymentMethods>
+
+            <Button
+              $primary
+              type="submit"
+              style={{ width: "100%", marginTop: "20px" }}
+            >
+              Zamów i zapłać
+            </Button>
+          </form>
         </Box>
       </ColumnsWrapper>
     </Center>

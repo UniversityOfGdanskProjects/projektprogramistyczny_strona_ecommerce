@@ -22,17 +22,17 @@ export const authOptions = {
           const client = await clientPromise;
           const db = client.db("ecommerce");
 
-          const admin = await db.collection("admins").findOne({
+          const user = await db.collection("users").findOne({
             email: credentials.email,
           });
 
-          if (!admin) {
+          if (!user) {
             return null;
           }
 
           const isPasswordValid = await bcrypt.compare(
             credentials.password,
-            admin.password
+            user.password
           );
 
           if (!isPasswordValid) {
@@ -40,9 +40,9 @@ export const authOptions = {
           }
 
           return {
-            id: admin._id.toString(),
-            email: admin.email,
-            role: "admin",
+            id: user._id.toString(),
+            email: user.email,
+            role: "user",
           };
         } catch (error) {
           console.error("Błąd autoryzacji:", error);
@@ -51,33 +51,45 @@ export const authOptions = {
       },
     }),
   ],
+  pages: {
+    signIn: "/auth/signin",
+    error: "/auth/error",
+  },
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.role = user.role;
-      }
-      return token;
-    },
     async session({ session, token }) {
       if (session?.user) {
         session.user.role = token.role;
       }
       return session;
     },
-
-    async redirect({ url, baseUrl }) {
-      return baseUrl + "/admin/dashboard";
+    async jwt({ token, user }) {
+      if (user) {
+        token.role = user.role;
+      }
+      return token;
     },
-  },
-  pages: {
-    signIn: "/auth/signin",
-    error: "/auth/error",
+    
+    async redirect({ url, baseUrl }) {
+      
+      if (url.startsWith(baseUrl)) {
+        return url;
+      }
+      
+      return baseUrl;
+    },
   },
   secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, 
   },
+  
+  theme: {
+    colorScheme: "light",
+  },
+  
+  debug: process.env.NODE_ENV === "development",
 };
 
-const handler = NextAuth(authOptions);
+export const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };

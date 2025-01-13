@@ -1,5 +1,7 @@
+"use client";
 import { GlobalStyles } from "./styles";
 import { CartContextProvider } from "@/components/CartContext";
+import { SessionProvider } from "next-auth/react";
 
 export default function RootLayout({ children }) {
   return (
@@ -11,10 +13,12 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body>
-        <CartContextProvider>
-          <GlobalStyles />
-          {children}
-        </CartContextProvider>
+        <SessionProvider>
+          <CartContextProvider>
+            <GlobalStyles />
+            {children}
+          </CartContextProvider>
+        </SessionProvider>
       </body>
     </html>
   );
