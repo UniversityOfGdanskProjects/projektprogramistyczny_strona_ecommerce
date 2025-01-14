@@ -25,7 +25,7 @@ const Title = styled.h2`
   margin-top:5px
   color: inherit;
   text-decoration: none;
-  margin-bottom: auto; // This helps push the price row to the bottom
+  margin-bottom: auto;
 `;
 
 const PriceRow = styled.div`
@@ -43,7 +43,7 @@ const Price = styled.div`
 const Button = styled.button`
   border: 0;
   padding: 8px 12px;
-  background-color: #5542f6; // Purple color
+  background-color: #5542f6;
   color: white;
   border-radius: 5px;
   cursor: pointer;
@@ -58,8 +58,8 @@ const SectionTitle = styled.h2`
   margin: 30px 0 0 0;
 `;
 
-export default function ProductBox({ products }) {
-  const { addProduct, cartProducts } = useCart();
+export default function ProductBox({ products, showTitle = true }) {
+  const { addProduct } = useCart();
 
   if (!Array.isArray(products)) {
     console.log("Products is not an array:", products);
@@ -78,7 +78,7 @@ export default function ProductBox({ products }) {
 
   return (
     <>
-      <SectionTitle>Najnowsze produkty</SectionTitle>
+      {showTitle && <SectionTitle>Najnowsze produkty</SectionTitle>}
       <ProductsGrid>
         {products.map((product) => (
           <ProductWrapper key={product._id}>
