@@ -69,6 +69,9 @@ export function CartContextProvider({ children }) {
       )
     );
   }
+  function clearCart() {
+    setCartProducts([]);
+  }
 
   return (
     <CartContext.Provider
@@ -79,6 +82,7 @@ export function CartContextProvider({ children }) {
         removeProduct,
         updateQuantity,
         getTotalCartCount,
+        clearCart,
       }}
     >
       {children}

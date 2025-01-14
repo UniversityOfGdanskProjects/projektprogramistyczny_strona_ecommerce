@@ -4,6 +4,7 @@ import Center from "@/components/Center";
 import Button from "@/components/Button";
 import { useCart } from "@/components/CartContext";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 const ColumnsWrapper = styled.div`
   display: grid;
@@ -88,8 +89,10 @@ const PaymentMethod = styled.div`
 `;
 
 const CartPage = () => {
-  const { cartProducts, updateQuantity } = useCart();
+  const { cartProducts, updateQuantity, clearCart } = useCart();
   const [selectedPayment, setSelectedPayment] = useState("");
+  const router = useRouter();
+  const [loading, setLoading] = useState(false); // Dodaj ten stan
   const [formData, setFormData] = useState({
     name: "",
     surname: "",
@@ -111,33 +114,66 @@ const CartPage = () => {
     return total + item.price * item.quantity;
   }, 0);
 
-  const handleSubmitOrder = (e) => {
+  const handleSubmitOrder = async (e) => {
     e.preventDefault();
     if (!selectedPayment) {
       alert("Proszę wybrać metodę płatności");
       return;
     }
 
-    console.log("Zamówienie:", {
-      formData,
-      selectedPayment,
-      cartProducts,
-      totalPrice,
-    });
-  };
+    setLoading(true);
 
-  if (cartProducts.length === 0) {
-    return (
-      <Center>
-        <Box>
-          <Title>Koszyk</Title>
-          <div style={{ textAlign: "center", padding: "20px" }}>
-            Brak produktów w koszyku
-          </div>
-        </Box>
-      </Center>
-    );
-  }
+    try {
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          products: cartProducts,
+          totalAmount: totalPrice,
+          shippingAddress: {
+            name: formData.name,
+            surname: formData.surname,
+            email: formData.email,
+            city: formData.city,
+            postalCode: formData.postalCode,
+            street: formData.street,
+            country: formData.country,
+          },
+          paymentMethod: selectedPayment,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || "Wystąpił błąd podczas składania zamówienia"
+        );
+      }
+
+      clearCart();
+
+      alert(`Dziękujemy! Twoje zamówienie zostało złożone pomyślnie.
+      Numer zamówienia: ${data.orderId}
+      Na Twój adres email zostanie wysłane potwierdzenie zamówienia.`);
+
+      const session = await fetch("/api/auth/session");
+      const sessionData = await session.json();
+
+      if (sessionData) {
+        router.push("/konto");
+      } else {
+        router.push("/auth/signin");
+      }
+    } catch (error) {
+      console.error("Błąd:", error);
+      alert(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Center>
@@ -271,8 +307,9 @@ const CartPage = () => {
               $primary
               type="submit"
               style={{ width: "100%", marginTop: "20px" }}
+              disabled={loading}
             >
-              Zamów i zapłać
+              {loading ? "Przetwarzanie zamówienia..." : "Zamów i zapłać"}
             </Button>
           </form>
         </Box>
