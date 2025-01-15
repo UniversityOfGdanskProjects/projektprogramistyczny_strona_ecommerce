@@ -1,6 +1,7 @@
 "use client";
 import styled from "styled-components";
 import { useCart } from "./CartContext";
+import Link from "next/link";
 
 const ProductsGrid = styled.div`
   display: grid;
@@ -12,20 +13,44 @@ const ProductsGrid = styled.div`
 const ProductWrapper = styled.div`
   display: flex;
   flex-direction: column;
+`;
+
+const ProductLink = styled(Link)`
+  text-decoration: none;
+  color: inherit;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+
+  &:hover {
+    img {
+      transform: scale(1.05);
+      transition: transform 0.2s;
+    }
+  }
+`;
+
+const ImageWrapper = styled.div`
+  padding: 10px;
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
   img {
     max-width: 100%;
     max-height: 150px;
     object-fit: contain;
+    transition: transform 0.2s;
   }
 `;
 
 const Title = styled.h2`
   font-weight: normal;
   font-size: 1rem;
-  margin-top:5px
+  margin: 5px 0;
   color: inherit;
   text-decoration: none;
-  margin-bottom: auto;
 `;
 
 const PriceRow = styled.div`
@@ -66,7 +91,8 @@ export default function ProductBox({ products, showTitle = true }) {
     return <div>Loading...</div>;
   }
 
-  const handleAddToCart = (product) => {
+  const handleAddToCart = (e, product) => {
+    e.preventDefault();
     const productToAdd = {
       id: product._id,
       title: product.title,
@@ -82,14 +108,18 @@ export default function ProductBox({ products, showTitle = true }) {
       <ProductsGrid>
         {products.map((product) => (
           <ProductWrapper key={product._id}>
-            <img src={product.images?.[0]} alt={product.title} />
-            <Title>{product.title}</Title>
-            <PriceRow>
-              <Price>{product.price} zł</Price>
-              <Button onClick={() => handleAddToCart(product)}>
-                Dodaj do koszyka
-              </Button>
-            </PriceRow>
+            <ProductLink href={`/produkt/${product._id}`}>
+              <ImageWrapper>
+                <img src={product.images?.[0]} alt={product.title} />
+              </ImageWrapper>
+              <Title>{product.title}</Title>
+              <PriceRow>
+                <Price>{product.price} zł</Price>
+                <Button onClick={(e) => handleAddToCart(e, product)}>
+                  Dodaj do koszyka
+                </Button>
+              </PriceRow>
+            </ProductLink>
           </ProductWrapper>
         ))}
       </ProductsGrid>

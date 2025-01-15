@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import ProductBox from "./ProductsGrid";
 import { useCart } from "./CartContext";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 
 const Bg = styled.div`
   background-color: #222;
@@ -49,6 +50,10 @@ const WelcomeMessage = styled.div`
   font-size: 1.2rem;
 `;
 
+const StyledLink = styled(Link)`
+  text-decoration: none;
+`;
+
 export default function Featured() {
   const { addProduct } = useCart();
   const [products, setProducts] = useState([]);
@@ -78,8 +83,6 @@ export default function Featured() {
         if (productsArray.length === 0) {
           console.warn("Received empty products array");
         }
-
-        console.log("Processed products array:", productsArray);
 
         setProducts(productsArray);
 
@@ -140,9 +143,13 @@ export default function Featured() {
                   Ut enim ad minim veniam.
                 </Desc>
                 <ButtonWrapper>
-                  <Button $outline $white>
-                    Czytaj więcej
-                  </Button>
+                  {macbookProduct && (
+                    <StyledLink href={`/produkt/${macbookProduct._id}`}>
+                      <Button $white $outline>
+                        Czytaj więcej
+                      </Button>
+                    </StyledLink>
+                  )}
                   <Button
                     $primary
                     onClick={handleAddToCart}
