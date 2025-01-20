@@ -5,6 +5,8 @@ import styled from "styled-components";
 import Header from "@/components/Headers";
 import Center from "@/components/Center";
 import { useCart } from "@/components/CartContext";
+import ProductReviews from "@/components/ProductReviews";
+import RelatedProducts from "@/components/RelatedProducts";
 
 const ProductWrapper = styled.div`
   margin: 40px 0;
@@ -200,6 +202,12 @@ export default function ProductPage({ params }) {
               </AddToCartButton>
             </ProductDetails>
           </ProductLayout>
+
+          <RelatedProducts
+            currentProduct={product._id}
+            categoryId={product.category}
+          />
+          <ProductReviews productId={product._id} />
         </ProductWrapper>
       </Center>
     </>
