@@ -20,9 +20,13 @@ const ProductTitle = styled.h1`
 
 const ProductLayout = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 40px;
-  margin-bottom: 30px;
+  grid-template-columns: 1fr;
+  gap: 20px;
+
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+  }
 `;
 
 const ImageWrapper = styled.div`
@@ -38,9 +42,9 @@ const MainImage = styled.img`
 `;
 
 const ImageButtons = styled.div`
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
   gap: 10px;
-  flex-wrap: wrap;
 `;
 
 const ImageButton = styled.div`

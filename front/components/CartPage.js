@@ -8,9 +8,15 @@ import { useRouter } from "next/navigation";
 
 const ColumnsWrapper = styled.div`
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
-  gap: 40px;
+  // Zmiana z fixed grid na responsywny
+  grid-template-columns: 1fr;
+  gap: 20px;
   margin-top: 40px;
+
+  @media (min-width: 768px) {
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 40px;
+  }
 `;
 
 const Box = styled.div`
@@ -92,7 +98,7 @@ const CartPage = () => {
   const { cartProducts, updateQuantity, clearCart } = useCart();
   const [selectedPayment, setSelectedPayment] = useState("");
   const router = useRouter();
-  const [loading, setLoading] = useState(false); // Dodaj ten stan
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     surname: "",

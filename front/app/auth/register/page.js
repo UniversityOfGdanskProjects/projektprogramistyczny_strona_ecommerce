@@ -145,7 +145,7 @@ export default function RegisterPage() {
             value={formData.password}
             onChange={handleChange}
             required
-            minLength={6}
+            minLength={8}
           />
           <Button type="submit" disabled={loading}>
             {loading ? "Rejestracja..." : "Zarejestruj się"}

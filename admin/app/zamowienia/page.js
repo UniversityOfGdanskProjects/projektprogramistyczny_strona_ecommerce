@@ -43,6 +43,35 @@ const ProductItem = styled.div`
   justify-content: space-between;
   padding: 8px 0;
   border-bottom: 1px solid #eee;
+  &:last-child {
+    border-bottom: none;
+  }
+`;
+
+const ProductDetails = styled.div`
+  flex-grow: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 10px;
+`;
+
+const ProductQuantity = styled.span`
+  background-color: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  margin-left: 10px;
+`;
+
+const TotalAmount = styled.div`
+  text-align: right;
+  font-weight: bold;
+  margin-top: 15px;
+  font-size: 1.1em;
+  color: #2c5282;
+  padding-top: 10px;
+  border-top: 2px solid #edf2f7;
 `;
 
 export default function OrdersPage() {
@@ -70,7 +99,7 @@ export default function OrdersPage() {
         orderId,
         status: newStatus,
       });
-      await fetchOrders(); // Odśwież listę zamówień
+      await fetchOrders();
     } catch (error) {
       console.error("Błąd aktualizacji statusu:", error);
     }
@@ -90,6 +119,7 @@ export default function OrdersPage() {
               <OrderHeader>
                 <div>
                   <h2>Zamówienie #{order._id}</h2>
+                  <div>Data: {new Date(order.createdAt).toLocaleString()}</div>
                 </div>
                 <StatusSelect
                   value={order.status}
@@ -108,8 +138,18 @@ export default function OrdersPage() {
                   <strong>Email klienta:</strong> {order.userEmail}
                 </div>
                 <div>
-                  <strong>Data zamówienia:</strong>{" "}
-                  {new Date(order.createdAt).toLocaleString()}
+                  <strong>Adres dostawy:</strong>
+                  <div style={{ marginLeft: "10px" }}>
+                    {order.shippingAddress?.name}{" "}
+                    {order.shippingAddress?.surname}
+                    <br />
+                    {order.shippingAddress?.street}
+                    <br />
+                    {order.shippingAddress?.postalCode}{" "}
+                    {order.shippingAddress?.city}
+                    <br />
+                    {order.shippingAddress?.country}
+                  </div>
                 </div>
               </OrderInfo>
 
@@ -117,19 +157,16 @@ export default function OrdersPage() {
                 <h3>Produkty:</h3>
                 {order.products.map((product, index) => (
                   <ProductItem key={index}>
-                    <span>{product.title}</span>
-                    <span>{product.price} zł</span>
+                    <ProductDetails>
+                      <div>
+                        {product.title}
+                        <ProductQuantity>x{product.quantity}</ProductQuantity>
+                      </div>
+                      <div>{product.price} zł</div>
+                    </ProductDetails>
                   </ProductItem>
                 ))}
-                <div
-                  style={{
-                    marginTop: "10px",
-                    fontWeight: "bold",
-                    textAlign: "right",
-                  }}
-                >
-                  Suma: {order.totalAmount} zł
-                </div>
+                <TotalAmount>Suma: {order.totalAmount} zł</TotalAmount>
               </ProductList>
             </OrderBox>
           ))

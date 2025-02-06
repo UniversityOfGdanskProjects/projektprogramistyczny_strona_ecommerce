@@ -33,7 +33,27 @@ const NavLink = styled(Link)`
 const StyledNav = styled.nav`
   display: flex;
   align-items: center;
-  gap: 25px; // Zmniejszony odstęp
+  gap: 15px;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    position: fixed;
+    top: 60px;
+    left: ${(props) => (props.isOpen ? "0" : "-100%")};
+    width: 100%;
+    height: calc(100vh - 60px);
+    background: #222;
+    padding: 20px;
+    transition: left 0.3s ease;
+  }
+`;
+
+const MobileMenuButton = styled.button`
+  display: none;
+
+  @media (max-width: 768px) {
+    display: block;
+  }
 `;
 
 const NavGroup = styled.div`
@@ -101,14 +121,14 @@ export default function Header() {
         <Wrapper>
           <Logo href={"/"}>TechNest</Logo>
           <StyledNav>
-            <NavLink href={"/"}>Start</NavLink> {/* Skrócone nazwy */}
+            <NavLink href={"/"}>Start</NavLink>
             <NavLink href={"/produkty"}>Produkty</NavLink>
             <NavLink href={"/kategorie"}>Kategorie</NavLink>
             {status === "loading" ? (
               <div>Ładowanie...</div>
             ) : session ? (
               <>
-                <NavLink href={"/konto"}>Konto</NavLink> {/* Skrócone */}
+                <NavLink href={"/konto"}>Konto</NavLink>
                 <AuthButton onClick={() => signOut({ callbackUrl: "/" })}>
                   Wyloguj
                 </AuthButton>

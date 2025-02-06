@@ -26,10 +26,17 @@ const Desc = styled.p`
 
 const Wrapper = styled.div`
   display: grid;
-  grid-template-columns: 0.9fr 1fr;
-  gap: 40px;
+  grid-template-columns: 1fr;
+  gap: 20px;
+
+  @media (min-width: 768px) {
+    grid-template-columns: 0.9fr 1fr;
+    gap: 40px;
+  }
+
   img {
     max-width: 100%;
+    height: auto;
   }
 `;
 

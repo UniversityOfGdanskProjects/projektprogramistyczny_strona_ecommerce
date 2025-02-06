@@ -1,83 +1,118 @@
 "use client";
-import { createContext, useState, useContext } from "react";
+import { createContext, useReducer, useContext } from "react";
 
 const CartContext = createContext({});
 
+const initialState = {
+  cartProducts: [],
+};
+
+function cartReducer(state, action) {
+  switch (action.type) {
+    case "ADD_PRODUCT": {
+      const existingProduct = state.cartProducts.find(
+        (item) => item.id === action.payload.id
+      );
+
+      if (existingProduct) {
+        return {
+          ...state,
+          cartProducts: state.cartProducts.map((item) =>
+            item.id === action.payload.id
+              ? { ...item, quantity: (item.quantity || 1) + 1 }
+              : item
+          ),
+        };
+      }
+
+      return {
+        ...state,
+        cartProducts: [
+          ...state.cartProducts,
+          { ...action.payload, quantity: 1 },
+        ],
+      };
+    }
+
+    case "REMOVE_PRODUCT":
+      return {
+        ...state,
+        cartProducts: state.cartProducts.filter(
+          (item) => item.id !== action.payload
+        ),
+      };
+
+    case "UPDATE_QUANTITY":
+      if (action.payload.quantity <= 0) {
+        return {
+          ...state,
+          cartProducts: state.cartProducts.filter(
+            (item) => item.id !== action.payload.productId
+          ),
+        };
+      }
+      return {
+        ...state,
+        cartProducts: state.cartProducts.map((item) =>
+          item.id === action.payload.productId
+            ? { ...item, quantity: action.payload.quantity }
+            : item
+        ),
+      };
+
+    case "CLEAR_CART":
+      return {
+        ...state,
+        cartProducts: [],
+      };
+
+    default:
+      return state;
+  }
+}
+
 export function CartContextProvider({ children }) {
-  const [cartProducts, setCartProducts] = useState([]);
+  const [state, dispatch] = useReducer(cartReducer, initialState);
 
   function getTotalCartCount() {
-    return cartProducts.reduce((sum, item) => sum + (item.quantity || 1), 0);
+    return state.cartProducts.reduce(
+      (sum, item) => sum + (item.quantity || 1),
+      0
+    );
   }
 
   function addProduct(productDetails) {
-    if (!productDetails || typeof productDetails !== "object") {
-      console.error("Nieprawidłowe dane produktu:", productDetails);
-      return;
-    }
-
     if (
-      !productDetails.id ||
-      !productDetails.title ||
-      !productDetails.price ||
-      !productDetails.image
+      !productDetails?.id ||
+      !productDetails?.title ||
+      !productDetails?.price
     ) {
       console.error("Brakujące wymagane pola produktu:", productDetails);
       return;
     }
 
-    console.log("Dodawany produkt (pełne dane):", productDetails);
-
-    setCartProducts((prev) => {
-      console.log("Poprzedni stan koszyka:", prev);
-
-      const existingProduct = prev.find(
-        (item) => item.id === productDetails.id
-      );
-
-      if (existingProduct) {
-        console.log("Znaleziono istniejący produkt, aktualizuję ilość");
-        const updated = prev.map((item) =>
-          item.id === productDetails.id
-            ? { ...item, quantity: (item.quantity || 1) + 1 }
-            : item
-        );
-        console.log("Zaktualizowany koszyk:", updated);
-        return updated;
-      } else {
-        console.log("Dodaję nowy produkt");
-        const newCart = [...prev, { ...productDetails, quantity: 1 }];
-        console.log("Nowy stan koszyka:", newCart);
-        return newCart;
-      }
-    });
+    dispatch({ type: "ADD_PRODUCT", payload: productDetails });
   }
 
   function removeProduct(productId) {
-    setCartProducts((prev) => prev.filter((item) => item.id !== productId));
+    dispatch({ type: "REMOVE_PRODUCT", payload: productId });
   }
 
   function updateQuantity(productId, newQuantity) {
-    if (newQuantity <= 0) {
-      removeProduct(productId);
-      return;
-    }
-
-    setCartProducts((prev) =>
-      prev.map((item) =>
-        item.id === productId ? { ...item, quantity: newQuantity } : item
-      )
-    );
+    dispatch({
+      type: "UPDATE_QUANTITY",
+      payload: { productId, quantity: newQuantity },
+    });
   }
+
   function clearCart() {
-    setCartProducts([]);
+    dispatch({ type: "CLEAR_CART" });
   }
 
   return (
     <CartContext.Provider
       value={{
-        cartProducts,
-        setCartProducts,
+        cartProducts: state.cartProducts,
         addProduct,
         removeProduct,
         updateQuantity,
