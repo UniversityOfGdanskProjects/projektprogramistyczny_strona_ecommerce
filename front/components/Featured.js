@@ -7,6 +7,7 @@ import ProductBox from "./ProductsGrid";
 import { useCart } from "./CartContext";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import SearchBar from "./SearchBar";
 
 const Bg = styled.div`
   background-color: #222;
@@ -61,9 +62,23 @@ const StyledLink = styled(Link)`
   text-decoration: none;
 `;
 
+const SearchContainer = styled.div`
+  margin: -25px 0 25px 0;
+  position: relative;
+  z-index: 100;
+`;
+
+const NoResults = styled.div`
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-size: 1.2rem;
+`;
+
 export default function Featured() {
   const { addProduct } = useCart();
   const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState(null);
   const [macbookProduct, setMacbookProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -129,6 +144,11 @@ export default function Featured() {
     }
   };
 
+  const handleSearch = (searchResults) => {
+    setFilteredProducts(searchResults);
+    console.log("Znalezione produkty:", searchResults.length);
+  };
+
   if (error) {
     console.error("Błąd ładowania produktów:", error);
   }
@@ -185,10 +205,21 @@ export default function Featured() {
         </Center>
       </Bg>
       <Center>
+        <SearchContainer>
+          <SearchBar onSearch={handleSearch} />
+        </SearchContainer>
         {isLoading ? (
           <div>Ładowanie produktów...</div>
         ) : error ? (
           <div>Błąd: {error}</div>
+        ) : filteredProducts ? (
+          filteredProducts.length > 0 ? (
+            <ProductBox products={filteredProducts} />
+          ) : (
+            <NoResults>
+              Nie znaleziono produktów spełniających kryteria wyszukiwania
+            </NoResults>
+          )
         ) : (
           <ProductBox products={products} />
         )}

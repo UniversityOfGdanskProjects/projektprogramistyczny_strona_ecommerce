@@ -1,59 +1,163 @@
+"use client";
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import styled from "styled-components";
 import debounce from "lodash/debounce";
 
-export default function SearchBar() {
+const SearchContainer = styled.div`
+  width: 100%;
+  max-width: 800px;
+  margin: 20px auto;
+  position: relative;
+  margin-top: 10px;
+`;
+
+const SearchWrapper = styled.div`
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+`;
+
+const InputGroup = styled.div`
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+`;
+
+const SearchInputWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 200px;
+  position: relative;
+`;
+
+const SearchInput = styled.input`
+  width: 100%;
+  padding: 12px;
+  padding-right: 40px;
+  border: 1px solid #e0e0e0;
+  border-radius: 5px;
+  font-size: 1rem;
+
+  &:focus {
+    outline: none;
+    border-color: #5542f6;
+  }
+`;
+
+const SearchButton = styled.button`
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  color: #5542f6;
+
+  &:hover {
+    color: #1100af;
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+`;
+
+const PriceInputs = styled.div`
+  display: flex;
+  gap: 10px;
+  align-items: center;
+`;
+
+const PriceInput = styled.input`
+  width: 100px;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 5px;
+  font-size: 1rem;
+
+  &:focus {
+    outline: none;
+    border-color: #5542f6;
+  }
+`;
+
+const SuggestionsContainer = styled.div`
+  position: absolute;
+  width: 100%;
+  background: white;
+  margin-top: 5px;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  max-height: 400px;
+  overflow-y: auto;
+`;
+
+const SuggestionItem = styled.div`
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #f8f9fa;
+  }
+
+  img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 5px;
+  }
+`;
+
+const ProductInfo = styled.div`
+  flex: 1;
+`;
+
+const ProductTitle = styled.div`
+  font-weight: 500;
+  margin-bottom: 5px;
+`;
+
+const ProductPrice = styled.div`
+  color: #5542f6;
+  font-weight: 600;
+`;
+
+export default function SearchBar({ onSearch }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [priceRange, setPriceRange] = useState({ min: "", max: "" });
-  const [selectedCategory, setSelectedCategory] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const searchRef = useRef(null);
   const router = useRouter();
 
   useEffect(() => {
-    const fetchInitialData = async () => {
+    const fetchProducts = async () => {
       try {
-        console.log("Fetching products...");
-        const productsRes = await fetch("/api/all-products");
-        console.log("Products response status:", productsRes.status);
-        if (!productsRes.ok) {
-          throw new Error(`Failed to fetch products: ${productsRes.status}`);
-        }
-        const productsData = await productsRes.json();
-        console.log("Products data received:", productsData.length, "items");
-        setProducts(productsData);
-
-        console.log("Fetching categories...");
-        const categoriesRes = await fetch("/api/categories");
-        console.log("Categories response status:", categoriesRes.status);
-        if (!categoriesRes.ok) {
-          throw new Error(
-            `Failed to fetch categories: ${categoriesRes.status}`
-          );
-        }
-        const categoriesText = await categoriesRes.text();
-        console.log("Raw categories response:", categoriesText);
-        let categoriesData;
-        try {
-          categoriesData = JSON.parse(categoriesText);
-          console.log("Categories data parsed:", categoriesData);
-        } catch (e) {
-          console.error("Failed to parse categories JSON:", e);
-          throw new Error("Invalid categories JSON response");
-        }
-        setCategories(categoriesData);
+        const response = await fetch("/api/all-products");
+        if (!response.ok) throw new Error("Failed to fetch products");
+        const data = await response.json();
+        setProducts(data.products || []);
       } catch (error) {
-        console.error("Error fetching initial data:", error);
+        console.error("Error fetching products:", error);
         setProducts([]);
-        setCategories([]);
       }
     };
 
-    fetchInitialData();
+    fetchProducts();
   }, []);
 
   useEffect(() => {
@@ -67,8 +171,8 @@ export default function SearchBar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const searchProducts = debounce((query, category, price) => {
-    setIsLoading(true);
+  const searchProducts = debounce((query) => {
+    if (!Array.isArray(products)) return;
 
     const filtered = products.filter((product) => {
       const matchesQuery =
@@ -76,45 +180,67 @@ export default function SearchBar() {
         (product.description &&
           product.description.toLowerCase().includes(query.toLowerCase()));
 
-      const matchesCategory = !category || product.category === category;
-
       const matchesPrice =
-        (!price.min || product.price >= Number(price.min)) &&
-        (!price.max || product.price <= Number(price.max));
+        (!priceRange.min || product.price >= Number(priceRange.min)) &&
+        (!priceRange.max || product.price <= Number(priceRange.max));
 
-      return matchesQuery && matchesCategory && matchesPrice;
+      return matchesQuery && matchesPrice;
     });
 
     setSuggestions(filtered.slice(0, 5));
-    setIsLoading(false);
   }, 300);
+
+  const handleSearch = () => {
+    setShowSuggestions(false);
+
+    if (!Array.isArray(products)) return;
+
+    const filtered = products.filter((product) => {
+      const matchesQuery =
+        searchQuery === "" ||
+        product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (product.description &&
+          product.description
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()));
+
+      const matchesPrice =
+        (!priceRange.min || product.price >= Number(priceRange.min)) &&
+        (!priceRange.max || product.price <= Number(priceRange.max));
+
+      return matchesQuery && matchesPrice;
+    });
+
+    if (typeof onSearch === "function") {
+      onSearch(filtered);
+    }
+  };
 
   const handleSearchChange = (e) => {
     const query = e.target.value;
     setSearchQuery(query);
-    setShowSuggestions(true);
 
-    if (query.length > 2) {
-      searchProducts(query, selectedCategory, priceRange);
+    if (query.length > 0) {
+      setShowSuggestions(true);
+      searchProducts(query);
     } else {
+      setShowSuggestions(false);
       setSuggestions([]);
-    }
-  };
-
-  const handleCategoryChange = (e) => {
-    setSelectedCategory(e.target.value);
-    if (searchQuery.length > 2) {
-      searchProducts(searchQuery, e.target.value, priceRange);
+      if (typeof onSearch === "function") {
+        onSearch(products);
+      }
     }
   };
 
   const handlePriceChange = (type, value) => {
     setPriceRange((prev) => ({ ...prev, [type]: value }));
-    if (searchQuery.length > 2) {
-      searchProducts(searchQuery, selectedCategory, {
-        ...priceRange,
-        [type]: value,
-      });
+    searchProducts(searchQuery);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSearch();
     }
   };
 
@@ -124,79 +250,69 @@ export default function SearchBar() {
   };
 
   return (
-    <div className="relative w-full max-w-2xl" ref={searchRef}>
-      <div className="flex flex-col gap-2 bg-white p-2 rounded-lg shadow-sm">
-        <div className="flex gap-2 flex-wrap">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={handleSearchChange}
-            placeholder="Wyszukaj produkty..."
-            className="flex-1 min-w-[200px] p-2 border rounded-md focus:outline-none focus:border-blue-500"
-          />
-          <select
-            value={selectedCategory}
-            onChange={handleCategoryChange}
-            className="p-2 border rounded-md focus:outline-none focus:border-blue-500 min-w-[150px]"
-          >
-            <option value="">Wszystkie kategorie</option>
-            {categories.map((cat) => (
-              <option key={cat._id} value={cat._id}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex gap-2 flex-wrap">
-          <input
-            type="number"
-            placeholder="Cena min"
-            value={priceRange.min}
-            onChange={(e) => handlePriceChange("min", e.target.value)}
-            className="w-24 p-2 border rounded-md focus:outline-none focus:border-blue-500"
-          />
-          <input
-            type="number"
-            placeholder="Cena max"
-            value={priceRange.max}
-            onChange={(e) => handlePriceChange("max", e.target.value)}
-            className="w-24 p-2 border rounded-md focus:outline-none focus:border-blue-500"
-          />
-        </div>
-      </div>
-
-      {showSuggestions && searchQuery.length > 2 && (
-        <div className="absolute w-full mt-1 bg-white border rounded-lg shadow-lg z-50">
-          {isLoading ? (
-            <div className="p-4 text-center text-gray-500">Wyszukiwanie...</div>
-          ) : suggestions.length > 0 ? (
-            suggestions.map((product) => (
-              <div
-                key={product._id}
-                onClick={() => handleProductClick(product._id)}
-                className="p-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2"
+    <SearchContainer ref={searchRef}>
+      <SearchWrapper>
+        <InputGroup>
+          <SearchInputWrapper>
+            <SearchInput
+              type="text"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              onKeyPress={handleKeyPress}
+              placeholder="Wyszukaj produkty..."
+            />
+            <SearchButton onClick={handleSearch}>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
               >
-                {product.images?.[0] && (
-                  <img
-                    src={product.images[0]}
-                    alt={product.title}
-                    className="w-12 h-12 object-cover rounded"
-                  />
-                )}
-                <div>
-                  <div className="font-medium">{product.title}</div>
-                  <div className="text-sm text-gray-600">
-                    {product.price} zł
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="p-4 text-center text-gray-500">Brak wyników</div>
-          )}
-        </div>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+                />
+              </svg>
+            </SearchButton>
+          </SearchInputWrapper>
+          <PriceInputs>
+            <PriceInput
+              type="number"
+              placeholder="Cena min"
+              value={priceRange.min}
+              onChange={(e) => handlePriceChange("min", e.target.value)}
+            />
+            <span>-</span>
+            <PriceInput
+              type="number"
+              placeholder="Cena max"
+              value={priceRange.max}
+              onChange={(e) => handlePriceChange("max", e.target.value)}
+            />
+          </PriceInputs>
+        </InputGroup>
+      </SearchWrapper>
+
+      {showSuggestions && suggestions.length > 0 && (
+        <SuggestionsContainer>
+          {suggestions.map((product) => (
+            <SuggestionItem
+              key={product._id}
+              onClick={() => handleProductClick(product._id)}
+            >
+              {product.images?.[0] && (
+                <img src={product.images[0]} alt={product.title} />
+              )}
+              <ProductInfo>
+                <ProductTitle>{product.title}</ProductTitle>
+                <ProductPrice>{product.price} zł</ProductPrice>
+              </ProductInfo>
+            </SuggestionItem>
+          ))}
+        </SuggestionsContainer>
       )}
-    </div>
+    </SearchContainer>
   );
 }

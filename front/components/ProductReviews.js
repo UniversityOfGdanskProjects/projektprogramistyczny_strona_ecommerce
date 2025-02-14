@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import styled from "styled-components";
 
 const ReviewsSection = styled.div`
@@ -116,61 +116,52 @@ const NoReviews = styled.p`
 
 export default function ProductReviews({ productId }) {
   const [reviews, setReviews] = useState([]);
-  const [averageRating, setAverageRating] = useState(0);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
+  const averageRating = useMemo(() => {
+    if (reviews.length === 0) return 0;
+    const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
+    return sum / reviews.length;
+  }, [reviews]);
+
   useEffect(() => {
-    checkAuthStatus();
+    fetch("/api/auth/session")
+      .then((res) => res.json())
+      .then((session) => setIsLoggedIn(!!session?.user))
+      .catch((err) => console.error("Error checking session:", err));
+
     fetchReviews();
   }, [productId]);
-
-  async function checkAuthStatus() {
-    try {
-      const response = await fetch("/api/auth/session");
-      const session = await response.json();
-      setIsLoggedIn(!!session?.user);
-    } catch (err) {
-      console.error("Error checking auth status:", err);
-      setIsLoggedIn(false);
-    }
-  }
 
   async function fetchReviews() {
     try {
       const response = await fetch(`/api/reviews/${productId}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch reviews");
-      }
       const data = await response.json();
       setReviews(data.reviews || []);
-      setAverageRating(data.averageRating || 0);
     } catch (error) {
       console.error("Error fetching reviews:", error);
-      setErrorMessage(
-        "Nie udało się załadować opinii. Spróbuj ponownie później."
-      );
+      setErrorMessage("Wystąpił błąd podczas pobierania opinii");
     }
   }
 
   async function handleSubmitReview(e) {
     e.preventDefault();
-    setErrorMessage("");
-
     if (!isLoggedIn) {
-      setErrorMessage("Musisz być zalogowany, aby dodać opinię");
+      alert("Musisz być zalogowany, aby dodać opinię");
       return;
     }
 
     if (rating === 0) {
-      setErrorMessage("Proszę wybrać ocenę");
+      alert("Proszę wybrać ocenę");
       return;
     }
 
     setIsSubmitting(true);
+    setErrorMessage("");
 
     try {
       const response = await fetch(`/api/reviews/${productId}`, {
@@ -179,15 +170,14 @@ export default function ProductReviews({ productId }) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          productId,
           rating,
           comment,
         }),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.error || "Wystąpił błąd podczas dodawania opinii");
+        throw new Error("Błąd podczas dodawania opinii");
       }
 
       setRating(0);
@@ -195,9 +185,7 @@ export default function ProductReviews({ productId }) {
       await fetchReviews();
     } catch (error) {
       console.error("Error submitting review:", error);
-      setErrorMessage(
-        error.message || "Wystąpił błąd podczas dodawania opinii"
-      );
+      setErrorMessage("Wystąpił błąd podczas dodawania opinii");
     } finally {
       setIsSubmitting(false);
     }
@@ -207,20 +195,6 @@ export default function ProductReviews({ productId }) {
     <ReviewsSection>
       <Title>Opinie klientów</Title>
       <ReviewsContainer>
-        {errorMessage && (
-          <div
-            style={{
-              color: "red",
-              marginBottom: "15px",
-              padding: "10px",
-              backgroundColor: "#fff5f5",
-              borderRadius: "5px",
-            }}
-          >
-            {errorMessage}
-          </div>
-        )}
-
         <AverageRating>
           <RatingBox>
             {[1, 2, 3, 4, 5].map((star) => (
@@ -236,7 +210,13 @@ export default function ProductReviews({ productId }) {
           <span>Średnia ocena: {averageRating.toFixed(1)} / 5</span>
         </AverageRating>
 
-        {isLoggedIn ? (
+        {errorMessage && (
+          <div style={{ color: "red", marginBottom: "20px" }}>
+            {errorMessage}
+          </div>
+        )}
+
+        {isLoggedIn && (
           <ReviewForm onSubmit={handleSubmitReview}>
             <h3>Dodaj opinię</h3>
             <RatingBox>
@@ -262,18 +242,6 @@ export default function ProductReviews({ productId }) {
               {isSubmitting ? "Wysyłanie..." : "Dodaj opinię"}
             </Button>
           </ReviewForm>
-        ) : (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "20px",
-              backgroundColor: "#f8f9fa",
-              borderRadius: "5px",
-              marginBottom: "20px",
-            }}
-          >
-            Zaloguj się, aby dodać opinię
-          </div>
         )}
 
         <div>

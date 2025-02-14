@@ -8,7 +8,6 @@ import { useRouter } from "next/navigation";
 
 const ColumnsWrapper = styled.div`
   display: grid;
-  // Zmiana z fixed grid na responsywny
   grid-template-columns: 1fr;
   gap: 20px;
   margin-top: 40px;

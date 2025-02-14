@@ -22,6 +22,7 @@ const LoadingMessage = styled.div`
   font-size: 1.2rem;
   color: #555;
 `;
+
 const PaginationWrapper = styled.div`
   display: flex;
   justify-content: center;
@@ -55,17 +56,30 @@ const ErrorMessage = styled.div`
   font-size: 1.2rem;
 `;
 
+const NoResults = styled.div`
+  text-align: center;
+  padding: 30px;
+  color: #666;
+  font-size: 1.1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin: 20px 0;
+`;
+
 export default function ProductsPage() {
   const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const productsPerPage = 12; // Liczba produktów na stronę
+  const productsPerPage = 12;
 
   useEffect(() => {
-    fetchProducts();
-  }, [currentPage]);
+    if (!filteredProducts) {
+      fetchProducts();
+    }
+  }, [currentPage, filteredProducts]);
 
   async function fetchProducts() {
     setIsLoading(true);
@@ -85,68 +99,84 @@ export default function ProductsPage() {
   }
 
   function handlePageChange(newPage) {
-    window.scrollTo(0, 0); // Przewijanie na górę strony
+    window.scrollTo(0, 0);
     setCurrentPage(newPage);
   }
 
+  const handleSearch = (searchResults) => {
+    console.log("Wyniki wyszukiwania:", searchResults);
+    setFilteredProducts(searchResults);
+    setCurrentPage(1);
+  };
+
+  const displayProducts = filteredProducts || products;
+  const shouldShowPagination = !filteredProducts;
   return (
     <>
       <Header />
       <Center>
         <Title>Wszystkie produkty</Title>
         <SearchWrapper>
-          <SearchBar />
+          <SearchBar onSearch={handleSearch} />
         </SearchWrapper>
         {isLoading ? (
           <LoadingMessage>Ładowanie produktów...</LoadingMessage>
         ) : error ? (
           <ErrorMessage>{error}</ErrorMessage>
-        ) : (
+        ) : displayProducts.length > 0 ? (
           <>
-            <ProductBox products={products} showTitle={false} />
-            <PaginationWrapper>
-              <PageButton
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-              >
-                Poprzednia
-              </PageButton>
+            <ProductBox products={displayProducts} showTitle={false} />
+            {shouldShowPagination && (
+              <PaginationWrapper>
+                <PageButton
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  Poprzednia
+                </PageButton>
 
-              {[...Array(totalPages)].map((_, index) => {
-                // Pokazuj tylko kilka przycisków wokół aktualnej strony
-                if (
-                  index + 1 === 1 ||
-                  index + 1 === totalPages ||
-                  (index + 1 >= currentPage - 2 && index + 1 <= currentPage + 2)
-                ) {
-                  return (
-                    <PageButton
-                      key={index + 1}
-                      onClick={() => handlePageChange(index + 1)}
-                      $active={currentPage === index + 1}
-                    >
-                      {index + 1}
-                    </PageButton>
-                  );
-                }
+                {[...Array(totalPages)].map((_, index) => {
+                  if (
+                    index + 1 === 1 ||
+                    index + 1 === totalPages ||
+                    (index + 1 >= currentPage - 2 &&
+                      index + 1 <= currentPage + 2)
+                  ) {
+                    return (
+                      <PageButton
+                        key={index + 1}
+                        onClick={() => handlePageChange(index + 1)}
+                        $active={currentPage === index + 1}
+                      >
+                        {index + 1}
+                      </PageButton>
+                    );
+                  }
 
-                if (
-                  index + 1 === currentPage - 3 ||
-                  index + 1 === currentPage + 3
-                ) {
-                  return <span key={index}>...</span>;
-                }
-                return null;
-              })}
+                  if (
+                    index + 1 === currentPage - 3 ||
+                    index + 1 === currentPage + 3
+                  ) {
+                    return <span key={index}>...</span>;
+                  }
+                  return null;
+                })}
 
-              <PageButton
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-              >
-                Następna
-              </PageButton>
-            </PaginationWrapper>
+                <PageButton
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  Następna
+                </PageButton>
+              </PaginationWrapper>
+            )}
           </>
+        ) : (
+          <NoResults>
+            {filteredProducts
+              ? "Brak produktów spełniających kryteria wyszukiwania"
+              : "Brak produktów"}
+          </NoResults>
         )}
       </Center>
     </>

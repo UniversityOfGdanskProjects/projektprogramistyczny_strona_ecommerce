@@ -4,7 +4,6 @@ import clientPromise from "../../lib/mongodb";
 import { sendOrderConfirmationEmail } from "../../lib/mail";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
-// GET endpoint dla pobierania zamówień
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -40,7 +39,6 @@ export async function GET() {
   }
 }
 
-// POST endpoint dla tworzenia zamówień
 export async function POST(request) {
   try {
     const session = await getServerSession(authOptions);

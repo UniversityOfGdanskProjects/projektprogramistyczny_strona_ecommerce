@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import styled from "styled-components";
 import { useCart } from "@/components/CartContext";
 import Link from "next/link";
@@ -115,14 +115,17 @@ export default function RelatedProducts({ currentProduct, categoryId }) {
     }
   }, [categoryId, currentProduct]);
 
-  const handleAddToCart = (product) => {
-    addProduct({
-      id: product._id,
-      title: product.title,
-      price: product.price,
-      image: product.images?.[0],
-    });
-  };
+  const handleAddToCart = useCallback(
+    (product) => {
+      addProduct({
+        id: product._id,
+        title: product.title,
+        price: product.price,
+        image: product.images?.[0],
+      });
+    },
+    [addProduct]
+  );
 
   if (relatedProducts.length === 0) return null;
 
