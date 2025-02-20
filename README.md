@@ -6,7 +6,10 @@ Aplikacja e-commerce umożliwiająca użytkownikom przeglądanie, filtrowanie i 
 
 ## 🎬 Demo aplikacji
 
-📺 **Zobacz wersję demonstracyjną** na YouTube: ()
+📺 **Zobacz wersję demonstracyjną** na YouTube:
+
+- **Strona kliencka:** (https://youtu.be/tS501sNKvPo)
+- **Panel administratora:** (https://youtu.be/grpanY1wqjQ)
 
 ## 🚀 Technologie
 
