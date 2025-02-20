@@ -2,10 +2,9 @@
 import styled from "styled-components";
 import { useCart } from "./CartContext";
 import Link from "next/link";
-
 const ProductsGrid = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-columns: repeat(4, 1fr); /* Liczba kolumn */
   gap: 40px;
   padding-top: 30px;
 `;
@@ -13,21 +12,17 @@ const ProductsGrid = styled.div`
 const ProductWrapper = styled.div`
   display: flex;
   flex-direction: column;
+  min-height: 300px; /* Zmniejszamy minimalną wysokość kontenera */
+  display: flex;
+  justify-content: space-between; /* Wyrównuje elementy w pionie */
 `;
 
 const ProductLink = styled(Link)`
   text-decoration: none;
   color: inherit;
-  flex-grow: 1;
   display: flex;
   flex-direction: column;
-
-  &:hover {
-    img {
-      transform: scale(1.05);
-      transition: transform 0.2s;
-    }
-  }
+  height: 100%; /* Wykorzystujemy całą przestrzeń */
 `;
 
 const ImageWrapper = styled.div`
@@ -57,7 +52,8 @@ const PriceRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 10px;
+  margin-top: auto; /* Zapewnia wyrównanie na dole */
+  height: 50px; /* Wymusza stałą wysokość */
 `;
 
 const Price = styled.div`
